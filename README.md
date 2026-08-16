@@ -8,8 +8,10 @@ Claude Code / Claude Cowork에서 쓰는 **공개 스킬 모음**입니다. 직�
 |---|---|---|
 | [**work-harness**](skills/work-harness) | 글·문서·기획 산출물의 품질을 출력 전에 자체 검증 | 보고서·이메일·요약·기획 메모를 쓸 때 |
 | [**dev-evidence-gate**](skills/dev-evidence-gate) | 코드 작업의 완료 판정을 증거로 강제 | 앱·사이트·스크립트를 만들거나 고칠 때 |
+| [**app-launch-pipeline**](skills/app-launch-pipeline) | 앱 아이디어를 구글 플레이 출시까지 5단계로 | 안드로이드 앱을 처음부터 만들어 스토어에 올릴 때 |
 
-두 스킬은 짝입니다. 하나는 **읽는 사람이 받는 결과물**을, 다른 하나는 **동작해야 하는 결과물**을 책임집니다.
+앞의 두 스킬은 짝입니다. 하나는 **읽는 사람이 받는 결과물**을, 다른 하나는 **동작해야 하는 결과물**을 책임집니다.
+`app-launch-pipeline`은 그 둘을 실제 프로젝트 하나에 적용한 사례에 가깝습니다 — 앱을 만들어 출시하는 전 과정에 게이트를 심어 둔 것이라, 앞의 두 스킬을 함께 깔면 검수·완료 판정이 자동으로 물립니다.
 
 ---
 
@@ -22,6 +24,7 @@ AI에게 일을 시키면 이런 일이 반복됩니다.
 - 앞 문단에선 추천하다가 뒤 문단에선 비추천한다
 - 코드를 고쳐놓고 "테스트가 통과했으니 완료"라고 한다. 실제로 켜보면 안 된다
 - 검증하느라 띄운 서버가 그대로 살아있다
+- 앱은 다 만들었는데 스토어에서 사흘째 막혀 있다. 어디가 문제인지 아무도 안 알려준다
 
 전부 **출력 직전에 스스로 점검하는 기준이 없어서** 생기는 일입니다. 이 스킬들은 그 기준을 "예 / 아니오"로 답할 수 있는 판정 질문으로 만들어 매번 통과시킵니다.
 
@@ -41,6 +44,7 @@ cd public-skills-repo
 mkdir -p ~/.claude/skills
 ln -s "$(pwd)/skills/work-harness" ~/.claude/skills/work-harness
 ln -s "$(pwd)/skills/dev-evidence-gate" ~/.claude/skills/dev-evidence-gate
+ln -s "$(pwd)/skills/app-launch-pipeline" ~/.claude/skills/app-launch-pipeline
 ```
 
 특정 프로젝트에서만 쓰려면 `~/.claude/skills` 대신 그 프로젝트의 `.claude/skills`에 연결합니다.
@@ -57,6 +61,7 @@ Cowork는 폴더 연결 대신 `.skill` 파일 업로드 방식입니다.
 cd skills
 zip -r work-harness.skill work-harness
 zip -r dev-evidence-gate.skill dev-evidence-gate
+zip -r app-launch-pipeline.skill app-launch-pipeline
 ```
 
 만들어진 `.skill` 파일을 **Cowork > Customize > Skills**에서 업로드합니다.
@@ -76,6 +81,11 @@ zip -r dev-evidence-gate.skill dev-evidence-gate
 - "이번엔 빡세게 검증하고 완료해줘"
 - `ulw` 또는 "울트라워크" (전체 적용 강도로 실행)
 - "완료 전에 증거 게이트 통과시켜줘"
+
+**app-launch-pipeline**
+- "이런 앱 만들어서 스토어에 올리고 싶어" (아이디어 한 줄이면 됩니다)
+- "지금 몇 단계야?" (세션이 끊겨도 이어집니다)
+- "출시 전에 막히는 자리 뭐 있어?"
 
 ### 직접 만든 스킬에서 상속하기
 
@@ -105,6 +115,15 @@ zip -r dev-evidence-gate.skill dev-evidence-gate
 - **정리 영수증** — 검증하느라 띄운 프로세스·포트·임시파일을 껐다는 기록. 남아 있으면 완료가 아닙니다.
 - **정지 규칙** — 완료 조건이 성립하면 즉시 멈춥니다. 그 뒤의 추가 검증·보너스 리팩터링은 성실함이 아니라 범위 초과입니다.
 - **승인 편향 리뷰어** — 리뷰어는 blocker만 찾고(최대 3건), 애매하면 승인합니다. 완벽주의 리뷰어가 만드는 무한 수정 루프를 막습니다.
+
+### app-launch-pipeline
+
+- **5단계 파이프라인** — 기획 → 디자인 → 개발 → 검증 → 출시. 각 단계에 통과 조건이 붙어 있고, 통과 못 하면 다음으로 안 넘어갑니다.
+- **범위 폭주 방어** — 신규 앱이 실패하는 1순위 원인입니다. 기획 단계에서 "v1.0에서 뺄 것"을 넣을 기능만큼 구체적으로 확정하고, 개발 중 추가 요청이 오면 그 목록을 근거로 다음 버전으로 보냅니다.
+- **출시에서 막히는 자리 다섯 곳** — 검토 제출은 출시가 아니라는 것, 버튼이 비활성인 진짜 이유, 이 상태가 API로는 안 보인다는 것, 대시보드 진행도가 트랙별이라는 것, 그리고 versionCode가 한 번 쓰면 사라지는 소모품이라는 것.
+- **`.dev` 변종** — 스토어에서 받은 앱을 지우지 않고 수정본을 확인하는 법. 스캐폴딩 단계에서 미리 붙입니다.
+- **실기기에서만 드러나는 버그** — edge-to-edge 인셋 겹침, 자판이 입력창을 가림, 첫 설치에서만 나는 종료 버그. 에뮬레이터 통과는 검증 완료가 아닙니다.
+- **스토어 자산 절차**(`references/store-screenshots.md`) — 폰·7인치·10인치 스크린샷이 전부 필수라는 것부터, 태블릿 AVD 없이 태블릿 레이아웃을 캡처하는 법, 언어별 캡션 폰트 글리프 검사까지.
 
 ---
 
