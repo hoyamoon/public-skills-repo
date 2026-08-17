@@ -108,13 +108,16 @@ adb shell wm size reset; adb shell wm density reset   # 반드시 원복
 
 ## 3. Play 규격 합성 (캡션 바 + 라운드 프레임)
 
+준비: `pip install pillow`. 폰트 경로는 OS마다 다르므로 §3.1의 표에서 골라 쓴다.
+
 ```python
 from PIL import Image, ImageDraw, ImageFont
 BG = (22, 24, 29)   # 앱 브랜드 다크 뉴트럴
+FONT_KO = "..."     # §3.1 표에서 자기 OS 경로로 채운다
 def build(src_path, caption, out_path, W, H):
     src = Image.open(src_path).convert("RGB")
     canvas = Image.new("RGB", (W, H), BG); d = ImageDraw.Draw(canvas)
-    f = ImageFont.truetype("/System/Library/Fonts/AppleSDGothicNeo.ttc", int(W*0.045), index=8)
+    f = ImageFont.truetype(FONT_KO, int(W*0.045))
     y = int(H*0.03)
     for line in caption.split("\n"):
         bb = d.textbbox((0,0), line, font=f)
@@ -138,17 +141,29 @@ assert max(im.size) <= min(im.size)*2 and min(im.size) >= 320
 
 ### 3.1 🔴 캡션 폰트 — 언어마다 글리프가 있는지 실제로 렌더해서 본다
 
-**한국어 폰트(AppleSDGothicNeo)에는 일본어 신자체 글리프가 없다.** `写`·`変` 같은 글자가
-두부(□)로 나온다(실측). 일본어 캡션은 `Hiragino Sans GB.ttc`를 쓴다.
+**한 폰트가 모든 언어를 커버하지 않는다.** 한국어 폰트(macOS AppleSDGothicNeo)에는 일본어
+신자체 글리프가 없어 `写`·`変` 같은 글자가 두부(□)로 나온다(실측).
+
+OS별 기본 경로다. **자기 환경에 실제로 그 파일이 있는지 먼저 확인하고 쓴다.**
+
+| OS | 한국어 | 일본어 |
+|---|---|---|
+| macOS | `/System/Library/Fonts/AppleSDGothicNeo.ttc` | `/System/Library/Fonts/Hiragino Sans GB.ttc` |
+| Windows | `C:\Windows\Fonts\malgun.ttf` | `C:\Windows\Fonts\meiryo.ttc` |
+| Linux | `/usr/share/fonts/.../NotoSansKR-Regular.otf` | `/usr/share/fonts/.../NotoSansJP-Regular.otf` |
+
+OS를 안 타는 방법이 하나 있다. **Noto Sans CJK를 프로젝트에 직접 받아 두는 것**이다
+(구글 Noto 프로젝트, OFL 라이선스). 한·중·일을 한 파일이 커버해서 언어 분기가 사라지고,
+다른 컴퓨터에서 다시 만들 때도 경로가 안 깨진다. 배포용 스크립트라면 이쪽을 권한다.
 
 더 중요한 건 **검사 방법**이다. PIL의 `font.getmask(ch).getbbox() is None` 검사는
 글리프가 없어도 통과한다 — 이 검사만 믿으면 깨진 이미지를 그대로 올리게 된다.
 **언어별 샘플 문자열을 실제로 렌더해 이미지로 확인**하는 단계를 반드시 넣는다.
 
 ```python
-FONT_BY_LANG = {"ja": "/System/Library/Fonts/Hiragino Sans GB.ttc",
-                "ko": "/System/Library/Fonts/AppleSDGothicNeo.ttc"}
-# 그리고 각 언어 대표 문자열을 한 장에 렌더해 눈으로 확인한 뒤 본작업에 들어간다
+FONT_BY_LANG = {"ko": FONT_KO, "ja": FONT_JA}   # 위 표에서 자기 OS 경로로 채운다
+# 각 언어 대표 문자열을 한 장에 렌더해 눈으로 확인한 뒤 본작업에 들어간다
+# 예: ko "무음 촬영 · 1080p 영상" / ja "写真を無音で撮影 · 変換"
 ```
 
 ## 4. 아이콘 — 앱 리소스에서 렌더한다 (손으로 그리지 않는다)
