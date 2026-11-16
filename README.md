@@ -9,11 +9,14 @@ Claude Code / Claude Cowork에서 쓰는 **공개 스킬 모음**입니다. 직�
 | [**work-harness**](skills/work-harness) | 글·문서·기획 산출물의 품질을 출력 전에 자체 검증 | 보고서·이메일·요약·기획 메모를 쓸 때 |
 | [**dev-evidence-gate**](skills/dev-evidence-gate) | 코드 작업의 완료 판정을 증거로 강제 | 앱·사이트·스크립트를 만들거나 고칠 때 |
 | [**app-launch-pipeline**](skills/app-launch-pipeline) | 앱 아이디어를 구글 플레이 출시까지 5단계로 | 안드로이드 앱을 처음부터 만들어 스토어에 올릴 때 |
+| [**blank-worksheet-maker**](skills/blank-worksheet-maker) | 교재·정리 노트로 빈칸 학습지와 정답지를 만들고 다시 풀어 점검 | 시험·자격증 대비 암기용 빈칸이 필요할 때 |
 
 앞의 두 스킬은 짝입니다. 하나는 **읽는 사람이 받는 결과물**을, 다른 하나는 **동작해야 하는 결과물**을 책임집니다.
 `app-launch-pipeline`은 그 둘을 실제 프로젝트 하나에 적용한 사례에 가깝습니다 — 앱을 만들어 출시하는 전 과정에 게이트를 심어 둔 것이라, 앞의 두 스킬을 함께 깔면 검수·완료 판정이 자동으로 물립니다.
 
-**세 스킬은 서로 독립적입니다.** 필요한 것만 골라 깔아도 각각 온전히 동작합니다. `app-launch-pipeline`은 나머지 둘이 없을 때 쓸 인라인 체크리스트를 자체 §11에 들고 있습니다.
+`blank-worksheet-maker`는 개발과 무관한 학습용 스킬입니다. 혼자 설치해도 됩니다.
+
+**모든 스킬은 서로 독립적입니다.** 필요한 것만 골라 깔아도 각각 온전히 동작합니다. `app-launch-pipeline`은 나머지 둘이 없을 때 쓸 인라인 체크리스트를 자체 §11에 들고 있습니다.
 
 ---
 
@@ -47,9 +50,10 @@ mkdir -p ~/.claude/skills
 ln -s "$(pwd)/skills/work-harness" ~/.claude/skills/work-harness
 ln -s "$(pwd)/skills/dev-evidence-gate" ~/.claude/skills/dev-evidence-gate
 ln -s "$(pwd)/skills/app-launch-pipeline" ~/.claude/skills/app-launch-pipeline
+ln -s "$(pwd)/skills/blank-worksheet-maker" ~/.claude/skills/blank-worksheet-maker
 ```
 
-셋 다 필요하지 않으면 **원하는 줄만 실행**하면 됩니다. 서로 의존하지 않습니다.
+전부 필요하지 않으면 **원하는 줄만 실행**하면 됩니다. 서로 의존하지 않습니다.
 
 특정 프로젝트에서만 쓰려면 `~/.claude/skills` 대신 그 프로젝트의 `.claude/skills`에 연결합니다.
 
@@ -66,6 +70,7 @@ cd skills
 zip -r work-harness.skill work-harness
 zip -r dev-evidence-gate.skill dev-evidence-gate
 zip -r app-launch-pipeline.skill app-launch-pipeline
+zip -r blank-worksheet-maker.skill blank-worksheet-maker
 ```
 
 만들어진 `.skill` 파일을 **Cowork > Customize > Skills**에서 업로드합니다.
@@ -91,6 +96,11 @@ zip -r app-launch-pipeline.skill app-launch-pipeline
 - "앱 만들려면 뭐부터 준비해야 해?" (준비물·비용·계정 대기시간부터 정리해 줍니다)
 - "지금 몇 단계야?" (세션이 끊겨도 이어집니다)
 - "출시 전에 막히는 자리 뭐 있어?"
+
+**blank-worksheet-maker**
+- "이 정리 노트로 빈칸 학습지 만들어줘" (텍스트를 붙여 넣거나 PDF·사진을 올립니다)
+- "교과서 원문 그대로 두고 빈칸만 뚫어줘. 정답지는 따로"
+- "형광펜 친 곳 위주로 빈칸 20개"
 
 ### 직접 만든 스킬에서 상속하기
 
@@ -130,6 +140,19 @@ zip -r app-launch-pipeline.skill app-launch-pipeline
 - **`.dev` 변종** — 스토어에서 받은 앱을 지우지 않고 수정본을 확인하는 법. 스캐폴딩 단계에서 미리 붙입니다.
 - **실기기에서만 드러나는 버그** — edge-to-edge 인셋 겹침, 자판이 입력창을 가림, 첫 설치에서만 나는 종료 버그. 에뮬레이터 통과는 검증 완료가 아닙니다.
 - **스토어 자산 절차**(`references/store-screenshots.md`) — 폰·7인치·10인치 스크린샷이 전부 필수라는 것부터, 태블릿 AVD 없이 태블릿 레이아웃을 캡처하는 법, 언어별 캡션 폰트 글리프 검사까지.
+
+### blank-worksheet-maker
+
+- **원문 그대로 모드** — 문장을 한 글자도 바꾸지 않고 빈칸만 뚫습니다. 빈칸 뒤 조사도 원문 그대로 둡니다.
+- **빈칸 고르기 규칙 10개** — 숫자·예시 나열·긴 서술구는 뚫지 않고, 병렬로 붙은 말은 하나만, 같은 구절이면 고유명사 먼저. 정답이 둘 나오거나 단서가 없는 자리를 처음부터 피합니다.
+- **정답지 숨기고 다시 풀기** — 출력 전에 학습지만 보고 다시 풀어 정답 복수·추측 불가·노출·조사 오류를 잡습니다.
+- **예시**(`examples/광합성`) — 정리 노트 원문, 처음 만든 학습지, 다시 풀기 점검 결과(빈칸 12개 중 3개 수정), 고친 학습지·정답지.
+
+---
+
+## 상담·맞춤 제작
+
+우리 팀·수업에 맞춘 스킬이나 노션·AI 업무 자동화가 필요하면 [스텝핑스톤 컨설팅](https://www.stst.co.kr/main/consulting.php)으로 문의해 주세요.
 
 ---
 
